@@ -1,0 +1,20 @@
+# Docker
+**/node_modules
+**/dist
+**/build
+
+# Env files
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Terraform (por si convive)
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
