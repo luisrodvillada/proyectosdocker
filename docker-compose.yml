@@ -55,3 +55,4 @@ volumes:
 networks:
   mi_red:
     external: true
+
