@@ -13,7 +13,7 @@ services:
       - mi_red
     volumes:
       - ./WEB1:/usr/share/nginx/html   # ✅ bind mount correcto
-
+      - ./WEB1/nginx.conf:/etc/nginx/conf.d/default.conf
   proyecto1-api:
     build:
       context: ./backend
