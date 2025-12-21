@@ -9,6 +9,10 @@
   container.innerHTML = `
     <form id="itemForm" style="display:flex;gap:8px;align-items:center">
       <input id="itemName" placeholder="Nuevo item (se guardará en BD)" required style="padding:6px"/>
+      <input id="itemName" placeholder="Nuevo item2 (se guardará en BD)" required style="padding:6px"/>
+      <input id="itemName" placeholder="Nuevo item3(se guardará en BD)" required style="padding:6px"/>
+      <input id="itemName" placeholder="Nuevo item4(se guardará en BD)" required style="padding:6px"/>
+      <input id="itemName" placeholder="Nuevo item5(se guardará en BD)" required style="padding:6px"/>
       <button type="submit">Guardar</button>
       <span id="apiMsg" style="margin-left:8px;color:#0a58ca"></span>
     </form>

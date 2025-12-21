@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
 
   web:
@@ -7,21 +5,20 @@ services:
       context: ./WEB1
     container_name: web
     ports:
-      - "9090:80"
+      - "8080:80"
     depends_on:
       - proyecto1-api
     restart: unless-stopped
     networks:
       - mi_red
+    volumes:
+      - ./WEB1:/usr/share/nginx/html   # ✅ bind mount correcto
 
   proyecto1-api:
     build:
       context: ./backend
     image: proyecto1-api:local
     container_name: proyecto1-api
-    # 🔐 RECOMENDADO: no exponer el backend
-    # ports:
-    #   - "3000:3000"
     volumes:
       - ./backend/data:/app/data
     environment:
@@ -44,15 +41,14 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=postgres
     volumes:
-      - backend-db-data:/var/lib/postgresql/data
+      - backend-db-data:/var/lib/postgresql/data   # ✅ volumen nombrado
     restart: unless-stopped
     networks:
       - mi_red
 
 volumes:
-  backend-db-data:
+  backend-db-data:   # ✅ SOLO volumen nombrado
 
 networks:
   mi_red:
     external: true
-
