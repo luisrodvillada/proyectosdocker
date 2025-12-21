@@ -5,6 +5,10 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 
+/* =========================
+   DATABASE
+========================= */
+
 let pool = null;
 if (process.env.DB_HOST) {
   pool = new Pool({
@@ -16,12 +20,71 @@ if (process.env.DB_HOST) {
   });
 }
 
+/* =========================
+   APP CONFIG
+========================= */
+
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:9090';
+
+const app = express();
+app.use(cors({ origin: CORS_ORIGIN }));
+app.use(express.json());
+
+/* =========================
+   HEALTH CHECK
+========================= */
+
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+/* =========================
+   DAILY REGISTER (POST)
+========================= */
+
+app.post('/api/daily-register', async (req, res) => {
+  const { tareas, ejercicio, oracion, lectura, ingles } = req.body;
+
+  // Validación básica
+  if (!tareas || !ejercicio || !oracion || !lectura || !ingles) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Seguridad: DB no configurada
+  if (!pool) {
+    return res.status(500).json({ error: 'Database not configured' });
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      INSERT INTO daily_register
+      (tareas, ejercicio, oracion, lectura, ingles)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+      `,
+      [tareas, ejercicio, oracion, lectura, ingles]
+    );
+
+    res.status(201).json(result.rows[0]);
+
+  } catch (error) {
+    console.error('Error inserting daily_register:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+/* =========================
+   ITEMS (LEGACY / DEMO)
+========================= */
+
 const dataDir = path.join(__dirname, 'data');
 const dataFile = path.join(dataDir, 'items.json');
 
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
 
 let items = [];
 try {
@@ -39,20 +102,19 @@ try {
 }
 
 function persist() {
-  try { fs.writeFileSync(dataFile, JSON.stringify(items, null, 2)); }
-  catch (e) { console.error('Error persisting items:', e); }
+  try {
+    fs.writeFileSync(dataFile, JSON.stringify(items, null, 2));
+  } catch (e) {
+    console.error('Error persisting items:', e);
+  }
 }
-
-const app = express();
-app.use(cors({ origin: CORS_ORIGIN }));
-app.use(express.json());
-
-app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.get('/api/items', async (req, res) => {
   if (pool) {
     try {
-      const r = await pool.query('SELECT id, name, created_at FROM items ORDER BY id');
+      const r = await pool.query(
+        'SELECT id, name, created_at FROM items ORDER BY id'
+      );
       return res.json(r.rows);
     } catch (err) {
       console.error('DB query error (GET /api/items):', err);
@@ -79,13 +141,20 @@ app.post('/api/items', async (req, res) => {
       return res.status(500).json({ error: 'db error' });
     }
   } else {
-    const id = items.length ? Math.max(...items.map(i => i.id)) + 1 : 1;
+    const id = items.length
+      ? Math.max(...items.map(i => i.id)) + 1
+      : 1;
+
     const it = { id, name, created_at: new Date().toISOString() };
     items.push(it);
     persist();
     return res.status(201).json(it);
   }
 });
+
+/* =========================
+   START SERVER
+========================= */
 
 app.listen(PORT, async () => {
   if (pool) {
