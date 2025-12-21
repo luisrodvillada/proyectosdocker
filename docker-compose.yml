@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+
+  web:
+    build:
+      context: ./WEB1
+    container_name: web
+    ports:
+      - "9090:80"
+    depends_on:
+      - proyecto1-api
+    restart: unless-stopped
+    networks:
+      - mi_red
+
+  proyecto1-api:
+    build:
+      context: ./backend
+    image: proyecto1-api:local
+    container_name: proyecto1-api
+    # 🔐 RECOMENDADO: no exponer el backend
+    # ports:
+    #   - "3000:3000"
+    volumes:
+      - ./backend/data:/app/data
+    environment:
+      - NODE_ENV=production
+      - CORS_ORIGIN=http://192.168.1.11:9090
+      - DB_HOST=backend-db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=postgres
+    restart: unless-stopped
+    networks:
+      - mi_red
+
+  backend-db:
+    image: postgres:15-alpine
+    container_name: backend-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - backend-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - mi_red
+
+volumes:
+  backend-db-data:
+
+networks:
+  mi_red:
+    external: true
+
