@@ -1,19 +1,24 @@
 services:
 
-  web:
-    build:
-      context: ./WEB1
-    container_name: web
-    ports:
-      - "8080:80"
-    depends_on:
-      - proyecto1-api
+  backend-db:
+    image: postgres:15-alpine
+    container_name: backend-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - backend-db-data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - mi_red
-    volumes:
-      - ./WEB1:/usr/share/nginx/html   # ✅ bind mount correcto
-      - ./WEB1/nginx.conf:/etc/nginx/conf.d/default.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   proyecto1-api:
     build:
       context: ./backend
@@ -22,32 +27,49 @@ services:
     volumes:
       - ./backend/data:/app/data
     environment:
-      - NODE_ENV=production
-      - CORS_ORIGIN=http://192.168.1.11:9090
-      - DB_HOST=backend-db
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=postgres
+      NODE_ENV: production
+      CORS_ORIGIN: http://192.168.1.11:8080
+      DB_HOST: backend-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
     restart: unless-stopped
     networks:
       - mi_red
+    depends_on:
+      backend-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
-  backend-db:
-    image: postgres:15-alpine
-    container_name: backend-db
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+  web:
+    build:
+      context: ./WEB1
+    container_name: web
+    ports:
+      - "8080:80"
     volumes:
-      - backend-db-data:/var/lib/postgresql/data   # ✅ volumen nombrado
+      - ./WEB1:/usr/share/nginx/html
+      - ./WEB1/nginx.conf:/etc/nginx/conf.d/default.conf
     restart: unless-stopped
     networks:
       - mi_red
+    depends_on:
+      proyecto1-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
 
 volumes:
-  backend-db-data:   # ✅ SOLO volumen nombrado
+  backend-db-data:
 
 networks:
   mi_red:
