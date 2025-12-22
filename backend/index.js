@@ -167,3 +167,34 @@ app.listen(PORT, async () => {
   }
   console.log(`Backend listening on ${PORT}`);
 });
+
+//GET for lecture date in postgres 
+app.get('/api/daily-register', async (req, res) => {
+
+  if (!pool) {
+    return res.status(500).json({ error: 'Database not configured' });
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        tareas,
+        ejercicio,
+        oracion,
+        lectura,
+        ingles,
+        created_at
+      FROM daily_register
+      ORDER BY created_at DESC
+      `
+    );
+
+    res.json(result.rows);
+
+  } catch (error) {
+    console.error('Error fetching daily_register:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
