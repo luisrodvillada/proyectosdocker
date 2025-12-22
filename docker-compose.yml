@@ -19,11 +19,11 @@ services:
       retries: 5
       start_period: 10s
 
-  proyecto1-api:
+  backend-api:
     build:
       context: ./backend
-    image: proyecto1-api:local
-    container_name: proyecto1-api
+    image: mi-backend-api:local
+    container_name: backend-api
     volumes:
       - ./backend/data:/app/data
     environment:
@@ -60,7 +60,7 @@ services:
     networks:
       - mi_red
     depends_on:
-      proyecto1-api:
+      backend-api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost"]
