@@ -1,8 +1,13 @@
 FROM nginx:alpine
 
-# Copiar archivos al servidor web
-COPY index.html /usr/share/nginx/html/
-COPY script.js /usr/share/nginx/html/
+# Eliminar config por defecto
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Sobrescribir la configuración por defecto de Nginx
+# Copiar nuestra config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copiar la web real
+COPY WEB1 /usr/share/nginx/html
+
+CMD ["nginx", "-g", "daemon off;"]
+
