@@ -29,3 +29,18 @@ Docker sabe cuándo algo está realmente “listo”
 Stack más estable y profesional
 
 👉 Este fue el segundo bloque.
+
+23/12
+
+chore(docker): stabilize multi-service stack with env-based config and healthchecks
+
+- Restructured frontend into a single nginx container
+- Added multi-stage build for backend API
+- Centralized configuration using env/dev/.env
+- Implemented healthchecks for PostgreSQL and backend API
+- Fixed Docker DNS networking and internal-only service exposure
+- Removed hardcoded secrets from docker-compose
+- Cleaned up volumes, paths, and container dependencies
+
+
+
