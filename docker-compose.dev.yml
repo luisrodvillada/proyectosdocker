@@ -1,0 +1,17 @@
+services:
+  backend-api:
+    build:
+      context: ./backend
+    image: mi-backend-api:dev
+    volumes:
+      - ./backend:/app
+    env_file:
+      - env/dev/.env
+
+  web:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    env_file:
+      - env/dev/.env
