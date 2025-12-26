@@ -1,27 +1,26 @@
-name: CI Backend
+name: CI Backend Docker
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ci/docker-backend]
   pull_request:
+    branches: [main]
 
 jobs:
-  build-backend:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build backend image
+      - name: Build Docker image
         run: |
-          docker build -t backend-api:ci ./backend
+          docker build -f backend/Dockerfile -t backend-test:latest backend
 
-      - name: Smoke test container
+      - name: Test backend healthcheck
         run: |
-          docker run -d -p 3000:3000 backend-api:ci
-          sleep 3
-          curl http://localhost:3000/hello
+          docker run -d --name backend-test -p 3000:3000 backend-test:latest
+          sleep 10
+          curl -f http://localhost:3000/api/health
+          docker rm -f backend-test
